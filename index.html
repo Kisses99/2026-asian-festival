@@ -386,6 +386,7 @@
         </div>
 
         <div class="hud hud-left">
+            <button class="hud-btn" id="btn-fullscreen" title="Toggle Fullscreen">⛶</button>
             <button class="hud-btn" id="btn-rotate" title="Toggle Auto-Rotate">↻</button>
             <button class="hud-btn" id="btn-zoom-in" title="Zoom In">＋</button>
             <button class="hud-btn" id="btn-zoom-out" title="Zoom Out">－</button>
@@ -527,6 +528,11 @@
                     document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     loadModel(m);
+                    
+                    // Attempt to auto-fullscreen on user interaction
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(() => {});
+                    }
                 };
                 if (index === 0) btn.classList.add('active');
                 dock.appendChild(btn);
@@ -534,6 +540,16 @@
         }
 
         function setupHUD() {
+            document.getElementById('btn-fullscreen').onclick = () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error enabling fullscreen: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                }
+            };
+            
             document.getElementById('btn-info').onclick = () => {
                 document.getElementById('info-card').classList.toggle('hidden');
             };
