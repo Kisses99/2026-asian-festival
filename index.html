@@ -96,6 +96,23 @@
             font-size: 22px;
             font-weight: 600;
             letter-spacing: 1px;
+            padding-right: 20px;
+        }
+
+        #close-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            line-height: 1;
+            color: #fff;
+            opacity: 0.6;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #close-info:hover {
+            opacity: 1;
         }
 
         #info-card p {
@@ -351,6 +368,7 @@
         <header>2026 Asian Festival &mdash; China Wonder</header>
 
         <div id="info-card" class="glass-panel">
+            <span id="close-info" title="Close">&times;</span>
             <h2 id="asset-title">Asset Title</h2>
             <p id="asset-desc">Description loading...</p>
         </div>
@@ -521,6 +539,18 @@
             document.getElementById('btn-info').onclick = () => {
                 document.getElementById('info-card').classList.toggle('hidden');
             };
+            
+            document.getElementById('close-info').onclick = () => {
+                document.getElementById('info-card').classList.add('hidden');
+            };
+
+            // Close info card when tapping anywhere on the 3D model
+            renderer.domElement.addEventListener('pointerdown', () => {
+                const infoCard = document.getElementById('info-card');
+                if (!infoCard.classList.contains('hidden') && (window.innerWidth <= 768 || window.innerHeight <= 500)) {
+                    infoCard.classList.add('hidden');
+                }
+            });
             document.getElementById('btn-reset').onclick = () => {
                 resetIdleTimer();
                 camera.position.set(0, 2, 5);
