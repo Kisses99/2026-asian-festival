@@ -359,8 +359,12 @@
     <div id="app-container">
         <!-- Loader -->
         <div id="loader">
-            <div class="spinner"></div>
-            <div style="letter-spacing: 2px; font-weight: 300;">LOADING ASSET...</div>
+            <div class="spinner" id="loader-spinner"></div>
+            <div id="loader-text" style="letter-spacing: 2px; font-weight: 300; margin-bottom: 15px;">DOWNLOADING 3D MODEL...</div>
+            <div id="progress-container" style="width: 250px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; display: none;">
+                <div id="progress-bar" style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.3s;"></div>
+            </div>
+            <div id="progress-stats" style="margin-top: 10px; font-size: 12px; color: #aaa; font-weight: 300; display: none;">0 MB downloaded</div>
         </div>
 
         <div id="canvas-container"></div>
@@ -406,8 +410,8 @@
 
         const models = [
             // Terracotta Group
-            { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
             { id: 'terracotta-warrior-2', name: 'Terracotta Warrior', shortName: 'Warrior', path: 'model/terracotta_warrior_2_3dst40.glb', desc: 'A detailed look at an individual terracotta warrior. Each figure in the army is distinct, with unique facial features, hairstyles, and armor, highlighting the individuality of the soldiers.' },
+            { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
             { id: 'terracotta-warriors', name: 'Terracotta Army', shortName: 'Army', path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.' },
             // Great Wall Group
             { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
@@ -569,6 +573,18 @@
             loaderEl.style.opacity = '1';
             loaderEl.style.pointerEvents = 'all';
 
+            const loaderText = document.getElementById('loader-text');
+            const loaderSpinner = document.getElementById('loader-spinner');
+            const progressContainer = document.getElementById('progress-container');
+            const progressStats = document.getElementById('progress-stats');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if(loaderText) loaderText.textContent = 'DOWNLOADING 3D MODEL...';
+            if(loaderSpinner) loaderSpinner.style.display = 'block';
+            if(progressContainer) progressContainer.style.display = 'none';
+            if(progressStats) progressStats.style.display = 'none';
+            if(progressBar) progressBar.style.width = '0%';
+
             document.getElementById('asset-title').textContent = modelData.name;
             document.getElementById('asset-desc').textContent = modelData.desc;
 
@@ -587,43 +603,85 @@
             }
 
             const loader = new GLTFLoader();
-            loader.load(modelData.path, (gltf) => {
-                currentModel = gltf.scene;
+            loader.load(
+                modelData.path, 
+                (gltf) => {
+                    currentModel = gltf.scene;
 
-                const box = new THREE.Box3().setFromObject(currentModel);
-                const size = box.getSize(new THREE.Vector3());
-                const center = box.getCenter(new THREE.Vector3());
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const size = box.getSize(new THREE.Vector3());
+                    const center = box.getCenter(new THREE.Vector3());
 
-                const maxDim = Math.max(size.x, size.y, size.z);
-                // Reduce target size so wide models don't clip outside the screen
-                const scale = 1.6 / maxDim;
-                currentModel.scale.setScalar(scale);
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    // Reduce target size so wide models don't clip outside the screen
+                    const scale = 1.6 / maxDim;
+                    currentModel.scale.setScalar(scale);
 
-                box.setFromObject(currentModel);
-                box.getCenter(center);
-                currentModel.position.sub(center);
-                currentModel.position.y += (size.y * scale) / 2;
+                    box.setFromObject(currentModel);
+                    box.getCenter(center);
+                    currentModel.position.sub(center);
+                    currentModel.position.y += (size.y * scale) / 2;
 
-                currentModel.traverse((node) => {
-                    if (node.isMesh) {
-                        node.castShadow = true;
-                        node.receiveShadow = true;
+                    currentModel.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+
+                    scene.add(currentModel);
+                    
+                    setTimeout(() => {
+                        loaderEl.style.opacity = '0';
+                        loaderEl.style.pointerEvents = 'none';
+                    }, 300);
+
+                    resetIdleTimer();
+                    preloadModels();
+                },
+                (xhr) => {
+                    const progressContainer = document.getElementById('progress-container');
+                    const progressBar = document.getElementById('progress-bar');
+                    const progressStats = document.getElementById('progress-stats');
+                    const loaderSpinner = document.getElementById('loader-spinner');
+                    
+                    if (xhr.lengthComputable && xhr.total > 0) {
+                        if(progressContainer) progressContainer.style.display = 'block';
+                        if(progressStats) progressStats.style.display = 'block';
+                        if(loaderSpinner) loaderSpinner.style.display = 'none'; 
+                        
+                        const percent = (xhr.loaded / xhr.total) * 100;
+                        if(progressBar) progressBar.style.width = percent + '%';
+                        
+                        const loadedMB = (xhr.loaded / 1048576).toFixed(1);
+                        const totalMB = (xhr.total / 1048576).toFixed(1);
+                        if(progressStats) progressStats.textContent = `${loadedMB} MB / ${totalMB} MB`;
+                    } else if (xhr.loaded > 0) {
+                        if(progressStats) progressStats.style.display = 'block';
+                        const loadedMB = (xhr.loaded / 1048576).toFixed(1);
+                        if(progressStats) progressStats.textContent = `${loadedMB} MB downloaded...`;
                     }
-                });
+                },
+                (error) => {
+                    console.error('Error loading model', error);
+                    const text = document.getElementById('loader-text');
+                    if(text) text.textContent = 'ERROR LOADING ASSET';
+                }
+            );
+        }
 
-                scene.add(currentModel);
-                
-                setTimeout(() => {
-                    loaderEl.style.opacity = '0';
-                    loaderEl.style.pointerEvents = 'none';
-                }, 300);
+        let hasPreloaded = false;
+        function preloadModels() {
+            if (hasPreloaded) return;
+            hasPreloaded = true;
 
-                resetIdleTimer();
+            // Only preload if not on mobile (assume limited data)
+            if (window.innerWidth <= 768) return;
+            if (navigator.connection && navigator.connection.saveData) return;
 
-            }, undefined, (error) => {
-                console.error(error);
-                loaderEl.style.opacity = '0';
-                loaderEl.style.pointerEvents = 'none';
+            models.forEach((m, i) => {
+                if (i === 0) return;
+                fetch(m.path, { cache: 'force-cache', priority: 'low' }).catch(e => {});
             });
         }
 
