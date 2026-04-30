@@ -503,13 +503,6 @@
             buildDock();
             setupHUD();
 
-            // Hide info card on mobile by default
-            if (window.innerWidth <= 768 || window.innerHeight <= 500 || window.innerWidth / window.innerHeight <= 1) {
-                const infoCard = document.getElementById('info-card');
-                if(infoCard) {
-                    infoCard.classList.add('hidden');
-                }
-            }
 
             // Load Initial Model
             loadModel(models[0]);
