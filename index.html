@@ -120,9 +120,9 @@
         }
 
         .dock-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 22px;
             border: 2px solid transparent;
             background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
             backdrop-filter: blur(5px);
@@ -132,10 +132,11 @@
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            white-space: nowrap;
         }
 
         .dock-btn:hover {
@@ -258,13 +259,17 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         const models = [
-            { id: 'terracotta-high-res', name: 'Terracotta Horse', path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.', initial: 'TH' },
-            { id: 'terracotta-warriors', name: 'Terracotta Warriors', path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.', initial: 'TW' },
-            { id: 'great-wall-14th', name: '14th C. Great Wall', path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.', initial: 'GW' },
-            { id: 'great-wall-survey', name: 'Great Wall Survey', path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.', initial: 'GS' },
-            { id: 'potala-guanyin', name: 'Potala Guanyin', path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.', initial: 'PG' },
-            { id: 'imperial-building', name: 'Imperial Building', path: 'model/small_chinese_imperial_style_building.glb', desc: 'A small-scale architectural model showcasing the elegant and distinctive features of traditional Chinese imperial style, characterized by sweeping roofs, intricate brackets, and vibrant colors.', initial: 'IB' },
-            { id: 'shanghai-city', name: 'Shanghai Sandbox', path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.', initial: 'SH' }
+            // Terracotta Group
+            { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
+            { id: 'terracotta-warrior-2', name: 'Terracotta Warrior', shortName: 'Warrior', path: 'model/terracotta_warrior_2_3dst40.glb', desc: 'A detailed look at an individual terracotta warrior. Each figure in the army is distinct, with unique facial features, hairstyles, and armor, highlighting the individuality of the soldiers.' },
+            { id: 'terracotta-warriors', name: 'Terracotta Army', shortName: 'Army', path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.' },
+            // Great Wall Group
+            { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
+            { id: 'great-wall-survey', name: 'Great Wall Survey', shortName: 'Wall Survey', path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.' },
+            // Others
+            { id: 'potala-guanyin', name: 'Potala Guanyin', shortName: 'Guanyin', path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.' },
+            { id: 'imperial-building', name: 'Imperial Building', shortName: 'Imperial Bldg', path: 'model/small_chinese_imperial_style_building.glb', desc: 'A small-scale architectural model showcasing the elegant and distinctive features of traditional Chinese imperial style, characterized by sweeping roofs, intricate brackets, and vibrant colors.' },
+            { id: 'shanghai-city', name: 'Shanghai Sandbox', shortName: 'Shanghai', path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.' }
         ];
 
         let scene, camera, renderer, controls, currentModel;
@@ -364,7 +369,7 @@
             models.forEach((m, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'dock-btn';
-                btn.textContent = m.initial;
+                btn.textContent = m.shortName;
                 btn.title = m.name;
                 btn.onclick = () => {
                     document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
