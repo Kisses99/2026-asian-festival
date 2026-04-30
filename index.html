@@ -431,9 +431,6 @@
         const IDLE_TIMEOUT = 30000; // 30 seconds
         const loaderEl = document.getElementById('loader');
 
-        init();
-        animate();
-
         function init() {
             const container = document.getElementById('canvas-container');
 
@@ -761,6 +758,9 @@
             controls.update();
             renderer.render(scene, camera);
         }
+
+        init();
+        animate();
     </script>
 </body>
 </html>
