@@ -597,7 +597,29 @@
             "Did you know? Despite its massive skyline, the entire city of Shanghai is built upon a soft alluvial plain created by the Yangtze River."
         ];
 
+        const modelCache = {};
+
         function loadModel(modelData) {
+            document.getElementById('asset-title').textContent = modelData.name;
+            document.getElementById('asset-desc').textContent = modelData.desc;
+
+            if (currentModel) {
+                scene.remove(currentModel);
+                // Notice: We are no longer disposing geometry/materials so we can instantly reuse them!
+            }
+
+            if (modelCache[modelData.id]) {
+                // Instantly load from memory cache
+                currentModel = modelCache[modelData.id];
+                scene.add(currentModel);
+                resetIdleTimer();
+                
+                loaderEl.style.opacity = '0';
+                loaderEl.style.pointerEvents = 'none';
+                if (window.factInterval) clearInterval(window.factInterval);
+                return; // Exit here, zero loading needed
+            }
+
             loaderEl.style.opacity = '1';
             loaderEl.style.pointerEvents = 'all';
 
@@ -632,23 +654,6 @@
                 }, 4000);
             }
 
-            document.getElementById('asset-title').textContent = modelData.name;
-            document.getElementById('asset-desc').textContent = modelData.desc;
-
-            if (currentModel) {
-                scene.remove(currentModel);
-                currentModel.traverse((child) => {
-                    if (child.isMesh) {
-                        child.geometry.dispose();
-                        if (child.material.isMaterial) {
-                            child.material.dispose();
-                        } else {
-                            for (const material of child.material) material.dispose();
-                        }
-                    }
-                });
-            }
-
             const loader = new GLTFLoader();
             loader.load(
                 modelData.path, 
@@ -675,6 +680,9 @@
                             node.receiveShadow = true;
                         }
                     });
+
+                    // Save fully built model to memory cache!
+                    modelCache[modelData.id] = currentModel;
 
                     scene.add(currentModel);
                     
