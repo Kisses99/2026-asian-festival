@@ -414,16 +414,16 @@
 
         const models = [
             // Terracotta Group
-            { id: 'terracotta-warrior-2', name: 'Terracotta Warrior', shortName: 'Warrior', path: 'model/terracotta_warrior_2_3dst40.glb', desc: 'A detailed look at an individual terracotta warrior. Each figure in the army is distinct, with unique facial features, hairstyles, and armor, highlighting the individuality of the soldiers.' },
-            { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
-            { id: 'terracotta-warriors', name: 'Terracotta Army', shortName: 'Army', path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.' },
+            { id: 'terracotta-warrior-2', name: 'Terracotta Warrior', shortName: 'Warrior', size: 3730504, path: 'model/terracotta_warrior_2_3dst40.glb', desc: 'A detailed look at an individual terracotta warrior. Each figure in the army is distinct, with unique facial features, hairstyles, and armor, highlighting the individuality of the soldiers.' },
+            { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', size: 19478284, path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
+            { id: 'terracotta-warriors', name: 'Terracotta Army', shortName: 'Army', size: 34456864, path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.' },
             // Great Wall Group
-            { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
-            { id: 'great-wall-survey', name: 'Great Wall Survey', shortName: 'Wall Survey', path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.' },
+            { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', size: 56512356, path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
+            { id: 'great-wall-survey', name: 'Great Wall Survey', shortName: 'Wall Survey', size: 232698676, path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.' },
             // Others
-            { id: 'potala-guanyin', name: 'Potala Guanyin', shortName: 'Guanyin', path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.' },
-            { id: 'imperial-building', name: 'Imperial Building', shortName: 'Imperial Bldg', path: 'model/small_chinese_imperial_style_building.glb', desc: 'A small-scale architectural model showcasing the elegant and distinctive features of traditional Chinese imperial style, characterized by sweeping roofs, intricate brackets, and vibrant colors.' },
-            { id: 'shanghai-city', name: 'Shanghai Sandbox', shortName: 'Shanghai', path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.' }
+            { id: 'potala-guanyin', name: 'Potala Guanyin', shortName: 'Guanyin', size: 91805644, path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.' },
+            { id: 'imperial-building', name: 'Imperial Building', shortName: 'Imperial Bldg', size: 56239060, path: 'model/small_chinese_imperial_style_building.glb', desc: 'A small-scale architectural model showcasing the elegant and distinctive features of traditional Chinese imperial style, characterized by sweeping roofs, intricate brackets, and vibrant colors.' },
+            { id: 'shanghai-city', name: 'Shanghai Sandbox', shortName: 'Shanghai', size: 47956768, path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.' }
         ];
 
         let scene, camera, renderer, controls, currentModel;
@@ -701,16 +701,21 @@
                     const progressStats = document.getElementById('progress-stats');
                     const loaderSpinner = document.getElementById('loader-spinner');
                     
-                    if (xhr.lengthComputable && xhr.total > 0) {
+                    const totalBytes = modelData.size || xhr.total;
+                    
+                    if (totalBytes > 0) {
                         if(progressContainer) progressContainer.style.display = 'block';
                         if(progressStats) progressStats.style.display = 'block';
                         if(loaderSpinner) loaderSpinner.style.display = 'none'; 
                         
-                        const percent = (xhr.loaded / xhr.total) * 100;
+                        // Prevent loaded bytes from exceeding known total size (fixes server compression header bugs)
+                        const cappedLoaded = Math.min(xhr.loaded, totalBytes);
+                        
+                        const percent = (cappedLoaded / totalBytes) * 100;
                         if(progressBar) progressBar.style.width = percent + '%';
                         
-                        const loadedMB = (xhr.loaded / 1048576).toFixed(1);
-                        const totalMB = (xhr.total / 1048576).toFixed(1);
+                        const loadedMB = (cappedLoaded / 1048576).toFixed(1);
+                        const totalMB = (totalBytes / 1048576).toFixed(1);
                         if(progressStats) progressStats.textContent = `${loadedMB} MB / ${totalMB} MB`;
                     } else if (xhr.loaded > 0) {
                         if(progressStats) progressStats.style.display = 'block';
