@@ -365,6 +365,10 @@
                 <div id="progress-bar" style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.3s;"></div>
             </div>
             <div id="progress-stats" style="margin-top: 10px; font-size: 12px; color: #aaa; font-weight: 300; display: none;">0 MB downloaded</div>
+            
+            <div id="fun-fact-container" style="margin-top: 30px; max-width: 400px; text-align: center; font-size: 14px; font-style: italic; color: #eee; min-height: 80px; line-height: 1.5; padding: 0 20px; display: none;">
+                <span id="fun-fact-text" style="transition: opacity 0.5s ease-in-out; opacity: 1;">Did you know? The Terracotta Army was discovered entirely by accident in 1974 by local farmers drilling a well.</span>
+            </div>
         </div>
 
         <div id="canvas-container"></div>
@@ -569,6 +573,33 @@
             };
         }
 
+        const funFacts = [
+            "Did you know? The Terracotta Army was discovered entirely by accident in 1974 by local farmers drilling a well.",
+            "Did you know? Every single Terracotta Warrior has a uniquely sculpted face, hairstyle, and armor.",
+            "Did you know? The Terracotta figures were originally painted with vibrant colors, which sadly flaked off minutes after being unearthed.",
+            "Did you know? It took over 700,000 laborers nearly 40 years to build the Emperor's mausoleum.",
+            "Did you know? The Emperor's actual central tomb remains completely unopened to this day due to preservation concerns.",
+            "Did you know? The Great Wall is not a single continuous wall, but a vast network of walls built across different dynasties.",
+            "Did you know? Workers used a special mortar made from sticky rice soup and slaked lime to bind the bricks of the Ming Dynasty Great Wall!",
+            "Did you know? At over 13,000 miles long, the Great Wall is the longest man-made structure in the world.",
+            "Did you know? Smoke signals, fire, and flags were used to rapidly transmit military messages across the Great Wall's watchtowers.",
+            "Did you know? A famous legend tells of Meng Jiangnv, whose bitter weeping caused a section of the Great Wall to collapse.",
+            "Did you know? Located at an elevation of 12,100 feet in Lhasa, Potala Palace is the highest ancient palace in the world.",
+            "Did you know? The massive Potala Palace complex contains over 1,000 rooms, 10,000 shrines, and 200,000 statues.",
+            "Did you know? Liquid copper was poured into the foundations of Potala Palace to protect the massive structure against earthquakes.",
+            "Did you know? The exterior colors of Potala Palace hold profound meaning: white for peace, red for authority, and yellow for prosperity.",
+            "Did you know? Traditional imperial buildings were constructed entirely without nails, relying on intricate interlocking wooden brackets.",
+            "Did you know? Glazed yellow roof tiles were strictly reserved for the Emperor; anyone else building a yellow roof faced severe punishment.",
+            "Did you know? The Forbidden City famously has 9,999.5 rooms, leaving 10,000 exclusively for the Palace of the Jade Emperor in Heaven.",
+            "Did you know? Small mythical beast statues on roof eaves indicate the status of the building—the more beasts, the higher the rank.",
+            "Did you know? The number nine is highly auspicious in Chinese culture, representing the Emperor, and dictates the layout of imperial structures.",
+            "Did you know? Architectural layouts rely heavily on Feng Shui, ensuring buildings face south to harmonize with nature.",
+            "Did you know? The Shanghai Tower is the second-tallest building in the world and features the world's highest observation deck.",
+            "Did you know? Shanghai's famous waterfront 'Bund' showcases one of the world's finest collections of 1920s Art Deco architecture.",
+            "Did you know? Shanghai boasts the fastest commercial electric train in the world, the Maglev, reaching speeds of 267 mph (430 km/h).",
+            "Did you know? Despite its massive skyline, the entire city of Shanghai is built upon a soft alluvial plain created by the Yangtze River."
+        ];
+
         function loadModel(modelData) {
             loaderEl.style.opacity = '1';
             loaderEl.style.pointerEvents = 'all';
@@ -579,11 +610,30 @@
             const progressStats = document.getElementById('progress-stats');
             const progressBar = document.getElementById('progress-bar');
             
+            const factContainer = document.getElementById('fun-fact-container');
+            const factText = document.getElementById('fun-fact-text');
+            
             if(loaderText) loaderText.textContent = 'DOWNLOADING 3D MODEL...';
             if(loaderSpinner) loaderSpinner.style.display = 'block';
             if(progressContainer) progressContainer.style.display = 'none';
             if(progressStats) progressStats.style.display = 'none';
             if(progressBar) progressBar.style.width = '0%';
+            if(factContainer) factContainer.style.display = 'block';
+            
+            // Setup rotating fun facts
+            if (window.factInterval) clearInterval(window.factInterval);
+            if (factText) {
+                factText.style.opacity = '1';
+                factText.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+                
+                window.factInterval = setInterval(() => {
+                    factText.style.opacity = '0'; // fade out
+                    setTimeout(() => {
+                        factText.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+                        factText.style.opacity = '1'; // fade in
+                    }, 500);
+                }, 4000);
+            }
 
             document.getElementById('asset-title').textContent = modelData.name;
             document.getElementById('asset-desc').textContent = modelData.desc;
@@ -634,6 +684,7 @@
                     setTimeout(() => {
                         loaderEl.style.opacity = '0';
                         loaderEl.style.pointerEvents = 'none';
+                        if (window.factInterval) clearInterval(window.factInterval);
                     }, 300);
 
                     resetIdleTimer();
