@@ -263,6 +263,9 @@
                 max-width: 95%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+                scrollbar-width: none;
+                touch-action: pan-x;
             }
             #dock::-webkit-scrollbar {
                 display: none;
@@ -275,6 +278,7 @@
                 width: auto;
                 flex: 0 0 auto;
                 border-radius: 18px;
+                touch-action: pan-x manipulation;
             }
             #info-card {
                 top: 80px;
@@ -414,17 +418,15 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         const models = [
-            // Terracotta Group
+            // Sorted by size (smallest to largest) to prioritize quick loading
             { id: 'terracotta-warrior-2', name: 'Terracotta Warrior', shortName: 'Warrior', size: 3730504, path: 'model/terracotta_warrior_2_3dst40.glb', desc: 'A detailed look at an individual terracotta warrior. Each figure in the army is distinct, with unique facial features, hairstyles, and armor, highlighting the individuality of the soldiers.' },
             { id: 'terracotta-horse', name: 'Terracotta Horse', shortName: 'Horse', size: 19478284, path: 'model/terracotta_horse_-_high_resolution.glb', desc: 'A highly detailed 3D scan of a terracotta horse from the famous Terracotta Army of Qin Shi Huang. The intricate details showcase the remarkable craftsmanship of the era.' },
             { id: 'terracotta-warriors', name: 'Terracotta Army', shortName: 'Army', size: 34456864, path: 'model/qin_terracotta_warriors_and_horses-medium.glb', desc: 'A medium-resolution scan featuring warriors and horses from the grand Terracotta Army, an expansive collection of funerary art buried with the emperor in 210–209 BCE.' },
-            // Great Wall Group
-            { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', size: 56512356, path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
-            { id: 'great-wall-survey', name: 'Great Wall Survey', shortName: 'Wall Survey', size: 232698676, path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.' },
-            // Others
-            { id: 'potala-guanyin', name: 'Potala Guanyin', shortName: 'Guanyin', size: 91805644, path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.' },
+            { id: 'shanghai-city', name: 'Shanghai Sandbox', shortName: 'Shanghai', size: 47956768, path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.' },
             { id: 'imperial-building', name: 'Imperial Building', shortName: 'Imperial Bldg', size: 56239060, path: 'model/small_chinese_imperial_style_building.glb', desc: 'A small-scale architectural model showcasing the elegant and distinctive features of traditional Chinese imperial style, characterized by sweeping roofs, intricate brackets, and vibrant colors.' },
-            { id: 'shanghai-city', name: 'Shanghai Sandbox', shortName: 'Shanghai', size: 47956768, path: 'model/city-_shanghai-sandboxie.glb', desc: 'A sandbox-style city model representing the bustling metropolis of Shanghai. It highlights the modern skyline and rapid urban development of one of China\'s largest cities.' }
+            { id: 'great-wall-14th', name: '14th C. Great Wall', shortName: 'Wall (14th C.)', size: 56512356, path: 'model/14th_century_great_wall.glb', desc: 'A segment of the Great Wall of China built during the 14th century (Ming Dynasty). The Ming walls are the most famous and best-preserved sections of this incredible architectural feat.' },
+            { id: 'potala-guanyin', name: 'Potala Guanyin', shortName: 'Guanyin', size: 91805644, path: 'model/1965.556_potala_guanyin.glb', desc: 'A stunning representation of Guanyin, the bodhisattva of compassion, associated with the Potala Palace in Tibet. Such artifacts hold immense spiritual and cultural significance.' },
+            { id: 'great-wall-survey', name: 'Great Wall Survey', shortName: 'Wall Survey', size: 232698676, path: 'model/great_wall_survey.glb', desc: 'A comprehensive 3D survey model of a section of the Great Wall. This model provides an expansive view of how the wall traverses the rugged mountainous terrain.' }
         ];
 
         let scene, camera, renderer, controls, currentModel;
@@ -619,13 +621,31 @@
             document.getElementById('asset-title').textContent = modelData.name;
             document.getElementById('asset-desc').textContent = modelData.desc;
 
+            const isMobile = window.innerWidth <= 768;
+
             if (currentModel) {
                 scene.remove(currentModel);
-                // Notice: We are no longer disposing geometry/materials so we can instantly reuse them!
+                
+                if (isMobile) {
+                    // Mobile Devices: Aggressively free up Video RAM to prevent iOS Safari crashes
+                    currentModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.geometry.dispose();
+                            if (child.material.isMaterial) {
+                                child.material.dispose();
+                            } else if (child.material.length) {
+                                for (const material of child.material) material.dispose();
+                            }
+                        }
+                    });
+                    if (currentModel.userData && currentModel.userData.id) {
+                        delete modelCache[currentModel.userData.id];
+                    }
+                }
             }
 
-            if (modelCache[modelData.id]) {
-                // Instantly load from memory cache
+            if (!isMobile && modelCache[modelData.id]) {
+                // Instantly load from memory cache (Desktop only)
                 currentModel = modelCache[modelData.id];
                 scene.add(currentModel);
                 resetIdleTimer();
@@ -696,9 +716,13 @@
                             node.receiveShadow = true;
                         }
                     });
+                    
+                    currentModel.userData.id = modelData.id;
 
-                    // Save fully built model to memory cache!
-                    modelCache[modelData.id] = currentModel;
+                    if (!isMobile) {
+                        // Save fully built model to memory cache (Desktop only)!
+                        modelCache[modelData.id] = currentModel;
+                    }
 
                     scene.add(currentModel);
                     
@@ -752,9 +776,13 @@
             if (hasPreloaded) return;
             hasPreloaded = true;
 
-            // Only preload if not on mobile (assume limited data)
-            if (window.innerWidth <= 768) return;
-            if (navigator.connection && navigator.connection.saveData) return;
+            // Safeguard mobile data plans: do not preload if on slow connection or data saver
+            if (navigator.connection) {
+                const conn = navigator.connection;
+                if (conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === '3g') {
+                    return;
+                }
+            }
 
             models.forEach((m, i) => {
                 if (i === 0) return;
