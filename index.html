@@ -214,6 +214,54 @@
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* Mobile Responsiveness */
+        @media (max-width: 768px), (max-aspect-ratio: 1/1) {
+            #app-container {
+                max-width: 100vw;
+                max-height: 100vh;
+            }
+            header {
+                font-size: 15px;
+                top: 15px;
+                letter-spacing: 2px;
+            }
+            #dock {
+                bottom: 80px;
+                padding: 8px;
+                border-radius: 20px;
+                gap: 6px;
+                max-width: 95%;
+            }
+            .dock-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+                line-height: 1.1;
+                min-height: 34px;
+                max-width: 90px;
+            }
+            #info-card {
+                top: 60px;
+                bottom: auto;
+                right: 50%;
+                transform: translateX(50%);
+                width: 90%;
+                padding: 15px;
+                z-index: 5;
+            }
+            #info-card.hidden {
+                transform: translate(50%, -20px);
+            }
+            .hud {
+                bottom: 20px;
+            }
+            .hud-left { left: 15px; }
+            .hud-right { right: 15px; }
+            .hud-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
